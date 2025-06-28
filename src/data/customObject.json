@@ -1,0 +1,32 @@
+{
+      "id": "custom-mesh-1",
+    "speckle_type": "Objects.Other.BlockInstance",
+    "subtreeId": "custom-subtree-1",
+    "definition": {
+        "id": "custom-mesh-definition",
+        "speckle_type": "Objects.Other.BlockDefinition",
+        "displayValue": [
+            {
+                "id": "custom-mesh-geometry",
+      "speckle_type": "Objects.Geometry.Mesh",
+      "vertices": [
+        0.0, 0.0, 0.0,
+                    2.0, 0.0, 0.0,
+                    0.0, 2.0, 0.0
+      ],
+      "faces": [
+                    0, 0, 1, 2
+                ],
+                "colors": [
+                    255, 0, 0,
+                    0, 255, 0,
+                    0, 0, 255
+                ]
+            }
+        ]
+    },
+    "transform": {
+        "speckle_type": "Objects.Other.Transform",
+        "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+    }
+}

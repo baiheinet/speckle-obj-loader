@@ -4,7 +4,8 @@ import {
   SelectionEvent,
   SelectionExtension,
 } from '@speckle/viewer';
-import { Object3D, Vector3, Box3 } from 'three';
+// 从three.js中导入必要的类型
+import type { Object3D, Vector3, Box3 } from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 
 export class ExtendedSelection extends SelectionExtension {
