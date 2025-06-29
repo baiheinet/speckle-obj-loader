@@ -1,0 +1,4 @@
+id,speckle_type,applicationId,name,description,vertices,faces,colors,bbox_min,bbox_max,area,volume,units,transform_matrix,material,properties
+custom-mesh-1,Objects.Geometry.Mesh,custom-mesh-1,Red Triangle,First test triangle,"0,0,0,2,0,0,0,2,0","0,0,1,2","255,0,0,255,0,0,255,0,0","0,0,0","2,2,0",2.0,0.0,m,"1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1",basic,"type:test,priority:high"
+custom-mesh-2,Objects.Geometry.Mesh,custom-mesh-2,Green Triangle,Second test triangle,"0,0,0,1,0,0,0,1,0","0,0,1,2","0,255,0,0,255,0,0,255,0","0,0,0","1,1,0",0.5,0.0,m,"1,0,0,0,0,1,0,0,0,0,1,0,3,0,0,1",basic,"type:test,priority:medium"
+custom-mesh-3,Objects.Geometry.Mesh,custom-mesh-3,Blue Triangle,Third test triangle,"0,0,0,1.5,0,0,0,1.5,0","0,0,1,2","0,0,255,0,0,255,0,0,255","0,0,0","1.5,1.5,0",1.125,0.0,m,"1,0,0,0,0,1,0,0,0,0,1,0,0,3,0,1",basic,"type:test,priority:low" 

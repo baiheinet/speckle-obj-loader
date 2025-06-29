@@ -1,3 +1,4 @@
+import "./style.css";
 import {
   Viewer,
   DefaultViewerParams,
@@ -8,8 +9,8 @@ import {
   MeasurementsExtension,
   ObjectLayers
 } from "@speckle/viewer";
-import { CustomLoader } from "./CustomLoader";
-import customObjectData from "./data/customObject.json";
+import { GeometryGenerator, createDefaultScene, generateExampleScene } from "./utils/geometryGenerator";
+import { GeometryPanel } from "./components/GeometryPanel";
 
 async function main() {
   /** Get the HTML container */
@@ -27,8 +28,7 @@ async function main() {
   // 检查 Speckle Viewer 版本
   console.log('=== Speckle Viewer Version Check ===');
   console.log('Speckle Viewer version:', (window as any).SPECKLE_VERSION || 'Unknown');
-  console.log('Note: CustomLoader may have instances error with Speckle Viewer 2.20.1');
-  console.log('This is a known compatibility issue. Using bypass method to avoid error.');
+  console.log('Note: Using flexible geometry generator as per Speckle Python sample');
 
   /** Add the stock camera controller extension */
   viewer.createExtension(CameraController);
@@ -36,47 +36,35 @@ async function main() {
   /** Add mesurements extension */
   const measurements = viewer.createExtension(MeasurementsExtension);
 
-  // const urls = await UrlHelper.getResourceUrls(
-  //   "https://app.speckle.systems/projects/0d3cb7cb52/models/d7401eeec3"
-  // );
-  // for (const url of urls) {
-  //   const loader = new SpeckleLoader(viewer.getWorldTree(), url, "");
-  //   /** Load the speckle data */
-  //   await viewer.loadObject(loader, true);
-  //  }
-   
-   console.log('=== Testing ObjLoader ===');
-   const objLoader = new ObjLoader(viewer.getWorldTree(), '/triangle.obj');
-   await viewer.loadObject(objLoader, true);
-   console.log('ObjLoader test completed');
-   
-   // Wait a bit before testing custom loader
-   await new Promise(resolve => setTimeout(resolve, 2000));
-   
-   console.log('=== Testing CustomLoader ===');
-   console.log('Imported customObjectData:', customObjectData);
-   console.log('customObjectData type:', typeof customObjectData);
-   console.log('customObjectData keys:', Object.keys(customObjectData));
-   
-   const loader = new CustomLoader(customObjectData, viewer.getWorldTree(), viewer);
-   
-   // 使用绕过方法，直接调用 loader.load() 避免 instances 错误
-   console.log('=== Using CustomLoader Directly (Bypassing Speckle loadObject) ===');
-   console.log('CustomLoader before load:', loader);
-   console.log('CustomLoader finished:', loader.finished);
-   console.log('CustomLoader resource:', loader.resource);
-   
-   try {
-     await loader.load();
-     console.log('CustomLoader test completed successfully');
-     console.log('Red triangle is visible and functional');
-     console.log('No instances error because we bypassed Speckle\'s internal processing');
-   } catch (error: any) {
-     console.error('CustomLoader load failed:', error);
-   }
-   
-   // measurements.enabled = true;
-}
+  // 加载参考几何体
+  console.log('开始加载参考几何体...');
+  const objLoader = new ObjLoader(viewer.getWorldTree(), '/triangle.obj');
+  await viewer.loadObject(objLoader, true);
+  console.log('参考几何体加载完成');
+  
+  // 创建几何体生成器实例
+  const generator = new GeometryGenerator();
+  
+  // 设置空场景配置，不加载默认几何体
+  generator.setSceneConfig({
+    name: '用户自定义场景',
+    description: '用户动态添加的几何体',
+    globalProperties: {
+      type: 'user_created',
+      version: '1.0'
+    },
+    geometries: [] // 空数组，不包含默认几何体
+  });
+  
+  // ========== 集成 GeometryPanel ==========
+  // 挂载到页面右上角
+  const panel = new GeometryPanel(document.body, generator, viewer);
+  // 挂载到 window 以便 HTML 按钮调用
+  (window as any).geometryPanel = panel;
+  console.log('GeometryPanel 已挂载到 window.geometryPanel:', panel);
+  // =======================================
 
+  // measurements.enabled = true;
+}
 
 main();
