@@ -63,3 +63,66 @@ Box,0,0,0,m,#0000ff,,,,,,,2,2,2
 - 场景为空时，Speckle Viewer 相机无法自动缩放，请至少添加一个几何体。
 - 所有自定义对象必须设置到 PROPS 层，避免渲染冲突。
 - 仅支持 Point/Line/Box 三类 Speckle 标准对象。
+
+## 🛠 Speckle 自定义 Loader 实践指南
+
+### 1. 四大核心组件缺一不可
+
+- **SpeckleGeometryConverter**  
+  负责将 Speckle 对象递归转换为可渲染的 Three.js（或其他后端）几何体。
+
+- **SpeckleLoader**  
+  Loader 的基类，负责资源加载、树结构管理、生命周期等。自定义 Loader 必须继承它。
+
+- **SpeckleObject**  
+  所有 Speckle 数据的基类，递归遍历和数据结构的基础。
+
+- **WorldTree**  
+  场景树，负责管理所有加载到 Viewer 的对象。Loader 必须把解析后的对象挂载到 WorldTree。
+
+### 2. Base + @displayValue 是 Loader 的唯一入口
+
+- 所有自定义几何体必须包裹在 `speckle_type: "Base"` 的对象里
+- 所有可渲染对象必须放在 `@displayValue` 数组中
+
+### 3. 典型自定义 Loader 代码结构
+
+```typescript
+import {
+  SpeckleGeometryConverter,
+  SpeckleLoader,
+  SpeckleObject,
+  WorldTree,
+} from '@speckle/viewer';
+
+export class SpeckleJSONObjectLoader extends SpeckleLoader {
+  constructor(targetTree: WorldTree, resourceData?: string | ArrayBuffer) {
+    super(targetTree, 'dummy-url', undefined, false, resourceData);
+  }
+  public async load(): Promise<boolean> {
+    const parsedObj = JSON.parse(this._resourceData as string);
+    await (this as any).converter.traverse(
+      this._resource,
+      parsedObj as SpeckleObject,
+      async () => { /* ... */ }
+    );
+    const geometryConverter = new SpeckleGeometryConverter();
+    const renderTree = (this as any).tree.getRenderTree(this._resource);
+    if (!renderTree) return false;
+    await renderTree.buildRenderTree(geometryConverter);
+    return true;
+  }
+}
+```
+
+### 4. 常见错误与排查
+
+- **结构不规范**：必须有 Base 和 @displayValue
+- **缺少四大核心组件**：Loader 只用其一会导致渲染失败
+- **自定义字段无效**：Loader 只认 Speckle 标准字段
+
+---
+
+> **最佳实践**：始终用 Base 包裹所有几何体，所有可渲染对象放在 @displayValue 数组，Loader 代码必须用到四大核心组件。
+
+---
