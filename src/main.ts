@@ -2,16 +2,10 @@ import "./style.css";
 import {
   Viewer,
   DefaultViewerParams,
-  ObjLoader,
-  SpeckleLoader,
-  UrlHelper,
   CameraController,
-  MeasurementsExtension,
-  ObjectLayers
+  ViewerEvent
 } from "@speckle/viewer";
-import { GeometryGenerator, createDefaultScene, generateExampleScene } from "./utils/geometryGenerator";
-import { GeometryPanel } from "./components/GeometryPanel";
-
+import { TweakpanePanel } from "./components/TweakpanePanel";
 async function main() {
   /** Get the HTML container */
   const container = document.getElementById("renderer") as HTMLElement;
@@ -25,46 +19,119 @@ async function main() {
   /** Initialise the viewer */
   await viewer.init();
 
-  // 检查 Speckle Viewer 版本
-  console.log('=== Speckle Viewer Version Check ===');
-  console.log('Speckle Viewer version:', (window as any).SPECKLE_VERSION || 'Unknown');
-  console.log('Note: Using flexible geometry generator as per Speckle Python sample');
-
   /** Add the stock camera controller extension */
   viewer.createExtension(CameraController);
-  
-  /** Add mesurements extension */
-  const measurements = viewer.createExtension(MeasurementsExtension);
 
-  // 加载参考几何体
-  console.log('开始加载参考几何体...');
-  const objLoader = new ObjLoader(viewer.getWorldTree(), '/triangle.obj');
-  await viewer.loadObject(objLoader, true);
-  console.log('参考几何体加载完成');
-  
-  // 创建几何体生成器实例
-  const generator = new GeometryGenerator();
-  
-  // 设置空场景配置，不加载默认几何体
-  generator.setSceneConfig({
-    name: '用户自定义场景',
-    description: '用户动态添加的几何体',
-    globalProperties: {
-      type: 'user_created',
-      version: '1.0'
-    },
-    geometries: [] // 空数组，不包含默认几何体
+  // 创建 TweakpanePanel 并初始化UI
+  const panel = new TweakpanePanel(viewer);
+  panel.makeGenericUI();
+  panel.makeSceneUI();
+
+  // 监听 viewer 事件
+  // 移除无效的 LoadProgress、LoadComplete 事件绑定
+  viewer.on(ViewerEvent.ObjectClicked, (selectionInfo) => {
+    panel.setSelectedObject(selectionInfo);
   });
-  
-  // ========== 集成 GeometryPanel ==========
-  // 挂载到页面右上角
-  const panel = new GeometryPanel(document.body, generator, viewer);
-  // 挂载到 window 以便 HTML 按钮调用
-  (window as any).geometryPanel = panel;
-  console.log('GeometryPanel 已挂载到 window.geometryPanel:', panel);
-  // =======================================
 
-  // measurements.enabled = true;
+  // 用标准 @displayValue 结构
+  const base = {
+    id: "my-base-id",
+    speckle_type: "Base",
+    name: "DemoBase",
+    bbox: {
+      id: "bbox-id",
+      area: 0,
+      units: "m",
+      xSize: {
+        id: "xsize-id",
+        end: 0,
+        start: 0,
+        units: "m",
+        speckle_type: "Objects.Primitive.Interval",
+        applicationId: null,
+        totalChildrenCount: 0
+      },
+      ySize: {
+        id: "ysize-id",
+        end: 0,
+        start: 0,
+        units: "m",
+        speckle_type: "Objects.Primitive.Interval",
+        applicationId: null,
+        totalChildrenCount: 0
+      },
+      zSize: {
+        id: "zsize-id",
+        end: 0,
+        start: 0,
+        units: "m",
+        speckle_type: "Objects.Primitive.Interval",
+        applicationId: null,
+        totalChildrenCount: 0
+      },
+      volume: 0,
+      basePlane: {
+        id: "plane-id",
+        xdir: {
+          x: 1, y: 0, z: 0,
+          id: "xdir-id",
+          units: "m",
+          speckle_type: "Objects.Geometry.Vector",
+          applicationId: null,
+          totalChildrenCount: 0
+        },
+        ydir: {
+          x: 0, y: 1, z: 0,
+          id: "ydir-id",
+          units: "m",
+          speckle_type: "Objects.Geometry.Vector",
+          applicationId: null,
+          totalChildrenCount: 0
+        },
+        normal: {
+          x: 0, y: 0, z: 1,
+          id: "normal-id",
+          units: "m",
+          speckle_type: "Objects.Geometry.Vector",
+          applicationId: null,
+          totalChildrenCount: 0
+        },
+        origin: {
+          x: 0, y: 0, z: 0,
+          id: "origin-id",
+          units: "m",
+          speckle_type: "Objects.Geometry.Point",
+          applicationId: null,
+          totalChildrenCount: 0
+        },
+        units: "m",
+        speckle_type: "Objects.Geometry.Plane",
+        applicationId: null,
+        totalChildrenCount: 0
+      },
+      speckle_type: "Objects.Geometry.Box",
+      applicationId: null,
+      totalChildrenCount: 0
+    },
+    "@displayValue": [
+      {
+        id: "polyline-1",
+        speckle_type: "Objects.Geometry.Polyline",
+        value: [0,0,0, 5,0,0, 2.5,5,0],
+        closed: true,
+        units: "m",
+        applicationId: null,
+        totalChildrenCount: 0
+      }
+    ]
+  }
+  // 初始化时同步 base 到 TweakpanePanel 的 geometries，并添加颜色
+  panel.geometries = base["@displayValue"].map(obj => ({ 
+    ...obj, 
+    color: "#ff0000" // 给初始几何体添加红色
+  }))
+  await panel.syncGeometriesToViewer()
+  // 移除多余的 loader.loadObject，后续所有渲染都由 panel.syncGeometriesToViewer 控制
 }
 
 main();

@@ -6,7 +6,7 @@ import {
 } from '@speckle/viewer';
 // 从three.js中导入必要的类型
 import type { Object3D, Vector3, Box3 } from 'three';
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 
 export class ExtendedSelection extends SelectionExtension {
   /** This object will recieve the TransformControls translation */
