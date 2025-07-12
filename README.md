@@ -80,10 +80,35 @@ Box,0,0,0,m,#0000ff,,,,,,,2,2,2
 - **WorldTree**  
   场景树，负责管理所有加载到 Viewer 的对象。Loader 必须把解析后的对象挂载到 WorldTree。
 
-### 2. Base + @displayValue 是 Loader 的唯一入口
+### 2. Speckle 对象结构与 displayValue 详解
 
-- 所有自定义几何体必须包裹在 `speckle_type: "Base"` 的对象里
-- 所有可渲染对象必须放在 `@displayValue` 数组中
+#### 2.1 有向无环图 (DAG) 结构
+Speckle 使用有向无环图 (DAG) 来管理对象，确保：
+- **效率**：避免循环依赖，确保高效的数据存储和检索
+- **非冗余**：对象可以在图中重复使用而不重复，减少数据冗余
+- **清晰性**：层次结构使不同对象之间的关系更容易理解
+
+#### 2.2 Definition 和 Instance 对象
+Speckle 通过 Definition 和 Instance 对象管理可重用组件：
+
+- **Definition**：作为可重用组件的模板，如窗户或门，在模型中多次出现
+- **Instance**：表示已定义组件的每次出现，包括指定位置、旋转和缩放的变换矩阵
+
+#### 2.3 displayValue 属性的真正含义
+根据 [Speckle Community 的详细阐述](https://speckle.community/t/how-to-covert-an-assembly-with-re-used-instances-to-speckle/12583/2)：
+
+> **重要理解**：`displayValue` 属性是一个包含网格列表的属性，代表对象的视觉方面。这允许组件具有灵活和详细的表示，而无需在每个级别都进行变换。
+
+**关键要点**：
+- `displayValue` 是**所有 Speckle 对象**都可以包含的属性
+- 它是一个**网格列表**，代表对象的视觉表现
+- 它允许对象具有灵活和详细的视觉表示
+- 它避免了在每个节点都应用变换的复杂性
+
+#### 2.4 Collection 和层次组织
+Speckle 使用 `Collection` 对象来分组相关元素，支持：
+- **模块化设计**：通过分组相关组件，鼓励模块化的模型设计方法
+- **可重用性**：定义一次的组件可以在模型的不同部分重复使用
 
 ### 3. 典型自定义 Loader 代码结构
 
@@ -120,9 +145,20 @@ export class SpeckleJSONObjectLoader extends SpeckleLoader {
 - **结构不规范**：必须有 Base 和 @displayValue
 - **缺少四大核心组件**：Loader 只用其一会导致渲染失败
 - **自定义字段无效**：Loader 只认 Speckle 标准字段
+- **displayValue 理解错误**：它不是 Base 对象的专属属性，而是所有 Speckle 对象都可以包含的视觉表现属性
 
 ---
 
-> **最佳实践**：始终用 Base 包裹所有几何体，所有可渲染对象放在 @displayValue 数组，Loader 代码必须用到四大核心组件。
+> **最佳实践**：理解 displayValue 是所有 Speckle 对象的通用视觉属性，而不仅仅是 Base 对象的专属。正确使用 Definition/Instance 模式来管理可重用组件。
 
 ---
+
+## 参考资料
+
+- [Generating a Surface from Scratch, specklePy - Speckle Community](https://speckle.community/t/generating-a-surface-from-scratch-specklepy/16225/6)
+
+该帖子详细讨论了如何用 Speckle 标准结构生成几何体、Base、@displayValue 等关键点，是理解和实现自定义 Loader 的重要参考。
+
+- [How to convert an Assembly with re-used instances to Speckle - Speckle Community](https://speckle.community/t/how-to-covert-an-assembly-with-re-used-instances-to-speckle/12583/2)
+
+这篇重要文章详细阐述了 Speckle 的 DAG 结构、Definition/Instance 模式，以及 displayValue 属性的真正含义。纠正了 displayValue 是 Base 对象专属属性的错误理解，明确了它是所有 Speckle 对象都可以包含的视觉表现属性。

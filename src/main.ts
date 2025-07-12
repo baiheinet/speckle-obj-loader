@@ -28,110 +28,56 @@ async function main() {
   panel.makeSceneUI();
 
   // 监听 viewer 事件
-  // 移除无效的 LoadProgress、LoadComplete 事件绑定
   viewer.on(ViewerEvent.ObjectClicked, (selectionInfo) => {
     panel.setSelectedObject(selectionInfo);
   });
 
-  // 用标准 @displayValue 结构
+  // 首页默认：一个闭合多边形（Slab）和一个Mesh（Wall）
+  const polygon = {
+    id: "polyline-1",
+    speckle_type: "Objects.Geometry.Polyline",
+    value: [0,5,0, 10,5,0, 10,15,0, 0,15,0, 0,5,0],
+    closed: true,
+    units: "m",
+    name: "Slab",
+    colorMaterial: {
+      color: 0xff0000,
+      opacity: 1,
+      roughness: 0.5,
+      metalness: 0,
+      vertexColors: false,
+    }
+  };
+
+  // 批量生成10个标准 Mesh
+  const meshes = [];
+  for (let i = 0; i < 10; i++) {
+    const mesh = {
+      id: `mesh-${i+1}`,
+      speckle_type: "Objects.Geometry.Mesh",
+      type: "Mesh",
+      vertices: [
+        0+i*20,0,0, 10+i*20,0,0, 10+i*20,0,10, 0+i*20,0,10
+      ],
+      faces: [0,0,1,2, 0,0,2,3], // 两个三角面
+      colors: [],
+      textureCoordinates: [],
+      name: `Wall${i+1}`,
+      units: "m"
+    };
+    meshes.push(mesh);
+  }
+
   const base = {
     id: "my-base-id",
     speckle_type: "Base",
     name: "DemoBase",
-    bbox: {
-      id: "bbox-id",
-      area: 0,
-      units: "m",
-      xSize: {
-        id: "xsize-id",
-        end: 0,
-        start: 0,
-        units: "m",
-        speckle_type: "Objects.Primitive.Interval",
-        applicationId: null,
-        totalChildrenCount: 0
-      },
-      ySize: {
-        id: "ysize-id",
-        end: 0,
-        start: 0,
-        units: "m",
-        speckle_type: "Objects.Primitive.Interval",
-        applicationId: null,
-        totalChildrenCount: 0
-      },
-      zSize: {
-        id: "zsize-id",
-        end: 0,
-        start: 0,
-        units: "m",
-        speckle_type: "Objects.Primitive.Interval",
-        applicationId: null,
-        totalChildrenCount: 0
-      },
-      volume: 0,
-      basePlane: {
-        id: "plane-id",
-        xdir: {
-          x: 1, y: 0, z: 0,
-          id: "xdir-id",
-          units: "m",
-          speckle_type: "Objects.Geometry.Vector",
-          applicationId: null,
-          totalChildrenCount: 0
-        },
-        ydir: {
-          x: 0, y: 1, z: 0,
-          id: "ydir-id",
-          units: "m",
-          speckle_type: "Objects.Geometry.Vector",
-          applicationId: null,
-          totalChildrenCount: 0
-        },
-        normal: {
-          x: 0, y: 0, z: 1,
-          id: "normal-id",
-          units: "m",
-          speckle_type: "Objects.Geometry.Vector",
-          applicationId: null,
-          totalChildrenCount: 0
-        },
-        origin: {
-          x: 0, y: 0, z: 0,
-          id: "origin-id",
-          units: "m",
-          speckle_type: "Objects.Geometry.Point",
-          applicationId: null,
-          totalChildrenCount: 0
-        },
-        units: "m",
-        speckle_type: "Objects.Geometry.Plane",
-        applicationId: null,
-        totalChildrenCount: 0
-      },
-      speckle_type: "Objects.Geometry.Box",
-      applicationId: null,
-      totalChildrenCount: 0
-    },
-    "@displayValue": [
-      {
-        id: "polyline-1",
-        speckle_type: "Objects.Geometry.Polyline",
-        value: [0,0,0, 5,0,0, 2.5,5,0],
-        closed: true,
-        units: "m",
-        applicationId: null,
-        totalChildrenCount: 0
-      }
-    ]
-  }
-  // 初始化时同步 base 到 TweakpanePanel 的 geometries，并添加颜色
-  panel.geometries = base["@displayValue"].map(obj => ({ 
-    ...obj, 
-    color: "#ff0000" // 给初始几何体添加红色
-  }))
+    "@displayValue": [polygon, ...meshes]
+  };
+
+  // 初始化时同步 base 到 TweakpanePanel 的 geometries
+  panel.geometries = base["@displayValue"].map(obj => ({ ...obj }))
   await panel.syncGeometriesToViewer()
-  // 移除多余的 loader.loadObject，后续所有渲染都由 panel.syncGeometriesToViewer 控制
 }
 
 main();

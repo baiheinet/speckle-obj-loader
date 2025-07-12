@@ -156,7 +156,7 @@ export class TweakpanePanel {
         name: geoParams.name || "Polyline",
         applicationId: null,
         totalChildrenCount: 0,
-        color: this.getRandomColorHex()
+        color: 0xff0000
       };
       
       this.geometries.push(geometryData);
@@ -187,27 +187,20 @@ export class TweakpanePanel {
     });
     
     console.log('Loading multi-geometry base:', base);
-    const loader = new SpeckleJSONObjectLoader(this.viewer.getWorldTree(), JSON.stringify(base));
+    const loader = new SpeckleJSONObjectLoader(this.viewer.getWorldTree(), this.viewer, JSON.stringify(base));
     await this.viewer.loadObject(loader, true);
     
-    console.log(`Loaded ${this.geometries.length} geometries in @displayValue array`);
   }
+
+ 
 
   public setSelectedObject(obj: any) {
     this.selectedObjRef = obj;
-    if (this.selObjPre) this.selObjPre.innerText = obj ? JSON.stringify(obj, null, 2) : '';
+    this.selObjPre.textContent = JSON.stringify(obj, null, 2);
   }
 
   public clearSelection() {
     this.selectedObjRef = null;
-    if (this.selObjPre) this.selObjPre.innerText = '';
+    this.selObjPre.textContent = '';
   }
-
-  private getRandomColorHex(): string {
-    // 生成随机的十六进制颜色值
-    const r = Math.floor(Math.random() * 256);
-    const g = Math.floor(Math.random() * 256);
-    const b = Math.floor(Math.random() * 256);
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  }
-} 
+}
