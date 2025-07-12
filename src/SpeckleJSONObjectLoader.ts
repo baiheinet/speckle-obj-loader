@@ -17,6 +17,7 @@ export class SpeckleJSONObjectLoader extends SpeckleLoader {
     );
     this.viewer = viewer;
   }
+  
   public async load(): Promise<boolean> {
     const parsedObj = JSON.parse(this._resourceData as string);
     /** Converter is private in base class,so we have to cheat */
@@ -34,27 +35,36 @@ export class SpeckleJSONObjectLoader extends SpeckleLoader {
     /** Tree is private in base class so have to cheat again */
     const renderTree = (this as any).tree.getRenderTree(this._resource);
     if (!renderTree) return Promise.resolve(false);
+    
     const p = renderTree.buildRenderTree(geometryConverter);
-    // --- 新增：渲染完成后批量设置所有 Mesh 材质为红色 ---
- 
 
-    void p.then(() => {
-      // 关键：补全 batching 逻辑
-      renderTree.batch();
-
-      // 后续 setMaterial 逻辑
-      const worldTree = this.viewer.getWorldTree();
-      const renderTree2 = worldTree.getRenderTree();
-      const rvs = renderTree2.getRenderViewsForNode(worldTree.root);
-      const materialData = {
-        color: 0xff0000,
-        opacity: 1,
-        roughness: 0.5,
-        metalness: 0,
-        vertexColors: false,
-      };
-      this.viewer.getRenderer().setMaterial(rvs, materialData);
-      this.viewer.requestRender();
+    void p.then(async () => {
+      console.log('Render tree built, attempting to set materials...');
+      
+      try {
+        // 等待一帧确保渲染完成
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // 获取所有 RenderViews
+        const worldTree = this.viewer.getWorldTree();
+        const renderTree2 = worldTree.getRenderTree();
+        const rvs = renderTree2.getRenderViewsForNode(worldTree.root);
+        // 尝试设置材质
+        const materialData = {
+          color: 0xff0000, // 红色
+          opacity: 1,
+          roughness: 0.5,
+          metalness: 0,
+          vertexColors: false,
+        };
+          this.viewer.getRenderer().setMaterial(rvs, materialData);
+          console.log('Attempting to set material for meshes:', materialData); 
+          this.viewer.requestRender();
+          console.log('Material setting completed');    
+        
+      } catch (error) {
+        console.error('Error during material setting:', error);
+      }
     });
 
     return p;

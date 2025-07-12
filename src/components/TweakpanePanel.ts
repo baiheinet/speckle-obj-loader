@@ -19,7 +19,7 @@ export class TweakpanePanel {
     const panelContainer = document.getElementById('tweakpane-container') as HTMLElement;
     this.pane = new Pane({ container: panelContainer, title: 'Speckle Sandbox', expanded: true });
     (this.pane as any).containerElem_.style = 'position:fixed; top:20px; right:20px; width:320px;z-index:1000;';
-    this.tabs = this.pane.addTab({ pages: [ { title: '主页' }, { title: '场景' } ] });
+    this.tabs = this.pane.addTab({ pages: [ { title: '主页' }, { title: '场景' }, { title: '材质' } ] });
   }
 
   public makeGenericUI() {
@@ -127,6 +127,126 @@ export class TweakpanePanel {
       this.viewer.getRenderer().renderer.toneMapping = sceneParams.tonemapping;
       this.viewer.requestRender();
     });
+  }
+
+  public makeMaterialUI() {
+    const page = this.tabs.pages[2];
+    
+    // 材质控制参数
+    const materialParams = {
+      color: '#ff0000', // 红色
+      opacity: 1,
+      roughness: 0.5,
+      metalness: 0,
+      vertexColors: false
+    };
+    
+    // 颜色选择器
+    page.addInput(materialParams, 'color', { label: '颜色' }).on('change', () => {
+      this.setAllMeshMaterials(materialParams);
+    });
+    
+    // 透明度
+    page.addInput(materialParams, 'opacity', { min: 0, max: 1, label: '透明度' }).on('change', () => {
+      this.setAllMeshMaterials(materialParams);
+    });
+    
+    // 粗糙度
+    page.addInput(materialParams, 'roughness', { min: 0, max: 1, label: '粗糙度' }).on('change', () => {
+      this.setAllMeshMaterials(materialParams);
+    });
+    
+    // 金属度
+    page.addInput(materialParams, 'metalness', { min: 0, max: 1, label: '金属度' }).on('change', () => {
+      this.setAllMeshMaterials(materialParams);
+    });
+    
+    // 顶点颜色
+    page.addInput(materialParams, 'vertexColors', { label: '顶点颜色' }).on('change', () => {
+      this.setAllMeshMaterials(materialParams);
+    });
+    
+    // 预设材质按钮
+    page.addSeparator();
+    page.addButton({ title: '红色材质' }).on('click', () => {
+      materialParams.color = '#ff0000';
+      materialParams.opacity = 1;
+      materialParams.roughness = 0.5;
+      materialParams.metalness = 0;
+      this.setAllMeshMaterials(materialParams);
+      this.pane.refresh();
+    });
+    
+    page.addButton({ title: '蓝色材质' }).on('click', () => {
+      materialParams.color = '#0000ff';
+      materialParams.opacity = 1;
+      materialParams.roughness = 0.5;
+      materialParams.metalness = 0;
+      this.setAllMeshMaterials(materialParams);
+      this.pane.refresh();
+    });
+    
+    page.addButton({ title: '绿色材质' }).on('click', () => {
+      materialParams.color = '#00ff00';
+      materialParams.opacity = 1;
+      materialParams.roughness = 0.5;
+      materialParams.metalness = 0;
+      this.setAllMeshMaterials(materialParams);
+      this.pane.refresh();
+    });
+    
+    page.addButton({ title: '金属材质' }).on('click', () => {
+      materialParams.color = '#888888';
+      materialParams.opacity = 1;
+      materialParams.roughness = 0.1;
+      materialParams.metalness = 0.9;
+      this.setAllMeshMaterials(materialParams);
+      this.pane.refresh();
+    });
+    
+    page.addButton({ title: '玻璃材质' }).on('click', () => {
+      materialParams.color = '#ffffff';
+      materialParams.opacity = 0.3;
+      materialParams.roughness = 0.0;
+      materialParams.metalness = 0.0;
+      this.setAllMeshMaterials(materialParams);
+      this.pane.refresh();
+    });
+  }
+
+  private setAllMeshMaterials(materialParams: any) {
+    try {
+      // 获取所有 RenderViews
+      const worldTree = this.viewer.getWorldTree();
+      const renderTree = worldTree.getRenderTree();
+      const rvs = renderTree.getRenderViewsForNode(worldTree.root);
+
+      
+      if (rvs.length > 0) {
+        // 转换颜色格式
+        const colorHex = materialParams.color.replace('#', '');
+        const colorInt = parseInt(colorHex, 16);
+        
+        const materialData = {
+          color: colorInt,
+          opacity: materialParams.opacity,
+          roughness: materialParams.roughness,
+          metalness: materialParams.metalness,
+          vertexColors: materialParams.vertexColors,
+        };
+        
+        console.log('Setting material for', rvs.length, 'meshes:', materialData);
+         // 尝试使用 setMaterial
+         this.viewer.getRenderer().setMaterial(rvs, materialData);
+       
+        
+        this.viewer.requestRender();
+      } else {
+        console.warn('No Mesh RenderViews found for material setting');
+      }
+    } catch (error) {
+      console.error('Error setting materials:', error);
+    }
   }
 
   public async addGeometry(geoParams?: any) {
